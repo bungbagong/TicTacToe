@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -19,7 +18,7 @@ public class MainActivityFragment extends Fragment
 
     protected String[] mArray_XO;
     private int mGridNum = 100; //TODO: make this adjustable in setting
-    private ArrayAdapter<String> mArrayAdapter;
+    private GridCustomAdapter mArrayAdapter;
     public static final String ARRAY_XO_ID = "ArrayXOID";
     public static final String TURN_ID = "TurnID";
     public GameController gameController;
@@ -33,10 +32,11 @@ public class MainActivityFragment extends Fragment
         gameController = new GameController();
         if (savedInstanceState == null) {
             setmArray_XO(mGridNum); //set dummy array
-
+            gameController.setmArrayXO(mArray_XO);
             gameController.setTurnNum(1);
         } else {
             mArray_XO = savedInstanceState.getStringArray(ARRAY_XO_ID);
+            gameController.setmArrayXO(mArray_XO);
             gameController.setTurnNum(savedInstanceState.getInt(TURN_ID));
 
         }
@@ -49,7 +49,7 @@ public class MainActivityFragment extends Fragment
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
 
-        mArrayAdapter = new ArrayAdapter<String>(rootView.getContext(), R.layout.cell, mArray_XO);
+        mArrayAdapter = new GridCustomAdapter(rootView.getContext(), R.layout.cell, mArray_XO);
 
         GridView gridView = (GridView) rootView.findViewById(R.id.grid);
         gridView.setNumColumns((int) Math.sqrt(mGridNum)); //set grid column based on mGridNum
@@ -63,9 +63,17 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Toast.makeText(this.getActivity(),"Player X Turn",Toast.LENGTH_LONG).show();
+        Toast.makeText(this.getActivity(),"Player X Turn", Toast.LENGTH_LONG).show();
 
-        mArray_XO[position]=gameController.getXO();
+
+        gameController.updatemArrayXO(position);
+        mArray_XO = gameController.getmArrayXO();
+        if(gameController.isWin()){
+            int[] winArray = gameController.getWinArray();
+            mArrayAdapter.setArrayWin(winArray);
+            //TODO notify user
+            //TODO reset the game
+        }
         mArrayAdapter.notifyDataSetChanged();
 
     }
@@ -90,36 +98,7 @@ public class MainActivityFragment extends Fragment
     }
 
 
-    public class GameController {
 
-        private int mMaxTurn = 0;
-        private int mTurnNum = 0;
-
-        public GameController(){
-
-        }
-
-        public String getXO(){
-            mTurnNum++;
-
-            // if even number ="X", odd number= "O"
-            //TODO : Should be fixed depends on player ??
-            if ((mTurnNum&1)==0){ //even
-                return "X";
-            } else {
-                return "O";
-            }
-        }
-
-        public void setTurnNum(int turnNum){
-            this.mTurnNum = turnNum;
-        }
-
-        public int getTurnNum(){
-            return this.mTurnNum;
-        }
-
-    }
 
 
 }
